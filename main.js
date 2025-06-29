@@ -9,46 +9,58 @@ const vatField = $('#newItemVAT');
 const vatPercentage = 0.07;
 
 let subtotal = 0;
-let shippingAndHandling = 0; 
+let shippingAndHandling = 0;
 let vat = 0;
 let totalDue = 0;
 
+
 const accessoryLists = [
     {
+        id: 0,
         title: 'Transparent Phone Case With Flower Patterns',
         price: 129,
         img: 'images/tech_acc1.jpg'
     },
     {
+        id: 1,
         title: 'Phone Stand with Adjustable Angles',
         price: 99,
         img: 'images/tech_acc2.jpg'
     },
     {
+        id: 2,
         title: 'Screen Protector for Laptop',
         price: 154,
         img: 'images/tech_acc3.jpg'
     },
     {
+        id: 3,
         title: 'Smart Watch',
         price: 5999,
         img: 'images/tech_acc4.webp'
     },
     {
+        id: 4,
         title: 'Gaming Earphone with Microphone',
         price: 249,
         img: 'images/tech_acc5.webp'
     },
     {
+        id: 5,
         title: 'Bluetooth Stylus Pen For Tablets',
         price: 1899,
         img: 'images/tech_acc6.webp'
     }
 ];
 
-const shoppingCartList = [];
+let shoppingCartList = JSON.parse(sessionStorage.getItem('shoppingCartList')) || [];
+
+function getList() {
+    return JSON.parse(sessionStorage.getItem('shoppingCartList')) || [];
+}
 
 $(document).ready(function () {
+    $('#alert-message').hide(); // Hide the alert initially
     renderAccessories();
     renderProducts();
     renderShoppingCart();
@@ -64,7 +76,7 @@ function renderAccessories() {
         const isActive = index === 0 ? 'active' : '';
         const carouselItem = `
         <div class="carousel-item ${isActive}">
-            <img class="d-block w-100" src="${accessory.img}" alt="${accessory.title}">
+            <a href="products.html"><img class="d-block w-100" src="${accessory.img}" alt="${accessory.title}"></a>
         </div>
     `;
         carouselInner.append(carouselItem);
@@ -167,10 +179,10 @@ function renderItemTotals() {
 
 function calculateTotals() {
     subtotal = 0;
-    shippingAndHandling = 0; 
+    shippingAndHandling = 0;
     shoppingCartList.forEach(item => {
         subtotal += item.price * item.quantity;
-        shippingAndHandling += 25; 
+        shippingAndHandling += 25;
     });
 
     vat = (subtotal * vatPercentage).toFixed(2);
@@ -180,6 +192,8 @@ function calculateTotals() {
 }
 
 function addItem() {
+    $('#alert-message').hide();
+
     let idx = newItemProduct.val();
     let q = newItemQty.val();
 
@@ -188,10 +202,13 @@ function addItem() {
 
 
     shoppingCartList.push({
+        id: product.id,
         title: product.title,
         quantity: Number.parseFloat(q),
         price: product.price
     });
+
+    sessionStorage.setItem('shoppingCartList', JSON.stringify(shoppingCartList));
 
     $('#exampleModal').modal('hide');
     // renderTable();
@@ -202,35 +219,30 @@ function addItem() {
     newItemQty.val("");
 }
 
-// function addToCart(itemIndex) {
-//     window.alert('Item added to cart!~');
-//     const item = accessoryLists[itemIndex];
+function addToCart(itemIndex) {
+    window.alert('Item added to cart!~');
+    const item = accessoryLists[itemIndex];
+    console.log(`Adding item: ${item.title}, Price: ${item.price}`);
 
-//     if (shoppingCartList.includes(item)) {
-//         // If the item already exists in the cart, increase its quantity
-//         const existingItem = shoppingCartList.find(cartItem => cartItem.title === item.title);
-//         existingItem.quantity += 1;
-//     } else {
-//         shoppingCartList.push({
-//             title: item.title,
-//             price: item.price,
-//             quantity: 1,
-//         });
-//     }
+    const existingItemIndex = shoppingCartList.findIndex(cartItem => cartItem.id === item.id);
 
-//     renderShoppingCart();
-// };
-
-function updateVATField() {
-    var idx = $('#newItemProduct').val();
-    var qty = parseFloat($('#newItemQty').val());
-    if (idx !== "" && !isNaN(qty) && qty > 0) {
-        var price = productList[idx].unitPrice;
-        var vat = (price * qty * 0.07).toFixed(2);
-        $('#newItemVAT').val(vat);
+    if (existingItemIndex !== -1) {
+        // If item exists, increase quantity
+        shoppingCartList[existingItemIndex].quantity += 1;
     } else {
-        $('#newItemVAT').val("0.00");
+        // If new item, add to cart
+        shoppingCartList.push({
+            id: item.id,
+            title: item.title,
+            price: item.price,
+            quantity: 1,
+        });
     }
+
+    // Save to sessionStorage
+    sessionStorage.setItem('shoppingCartList', JSON.stringify(shoppingCartList));
+
+    renderShoppingCart();
 }
 
 function onProductChange() {
@@ -246,6 +258,10 @@ function onProductChange() {
 
 function deleteItem(index) {
     shoppingCartList.splice(index, 1);
+
+    // Save to sessionStorage
+    sessionStorage.setItem('shoppingCartList', JSON.stringify(shoppingCartList));
+
     renderShoppingCart();
 }
 
@@ -256,6 +272,29 @@ function checkout() {
     }
 
     alert(`Checkout successful! Total Due: ${totalDue}`);
-    shoppingCartList.empty() 
+    $('#alert-message').show();
+
+    // Clear sessionStorage
+    shoppingCartList = [];
+    sessionStorage.setItem('shoppingCartList', JSON.stringify(shoppingCartList));
+    // Clear sessionStorage
+
     renderShoppingCart();
 }
+
+function updateVATField() {
+    // Use the already initialized variables
+    const idx = newItemProduct.val();
+    const qty = parseFloat(newItemQty.val());
+    if (idx !== "" && !isNaN(qty) && qty > 0) {
+        const price = accessoryLists[idx].price;
+        const vat = (price * qty * vatPercentage).toFixed(2);
+        vatField.val(vat);
+    } else {
+        vatField.val("0.00");
+    }
+}
+
+// Use the already initialized variables for event binding
+newItemProduct.on('change', updateVATField);
+newItemQty.on('input', updateVATField);

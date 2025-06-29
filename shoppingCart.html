@@ -69,6 +69,10 @@
             <button type="button" class="btn btn-dark add-cart-btn" onclick="checkout()">Checkout</button>
         </div>
 
+        <div class="alert alert-success" role="alert" id="alert-message">
+            Thank you for your purchase! Your order has been successfully placed.
+        </div>
+
         <!-- the modal -->
         <div class="modal fade" id="exampleModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
             aria-hidden="true">
@@ -103,7 +107,7 @@
                             <tr>
                                 <td>VAT (7%)</td>
                                 <td>
-                                    <input type="text" id="newItemVAT" readonly value="0.00">
+                                    <input type="text" id="newItemVAT" readonly value="">
                                 </td>
                             </tr>
                         </table>
